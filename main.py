@@ -7,7 +7,8 @@ from algorithms.dueling_dqn import DQNAgent
 from algorithms.mc_reinforce import MCREINFORCE
 
 # Hyperparameters
-SEEDS = [42, 123, 456, 789, 1024]
+SEEDS = [0, 4, 6, 10, 15]
+# SEEDS = [42, 123, 456, 789, 1024]
 EPISODES = 1000
 TUNING_EPISODES = 200
 GAMMA = 0.99
@@ -170,7 +171,7 @@ if __name__ == "__main__":
 
     environments = ["Acrobot-v1", "CartPole-v1"]
     algorithms = {
-        "dueling_dqn": [1, 2],
+        # "dueling_dqn": [1, 2],
         "mc_reinforce": ["without_baseline", "with_baseline"],
     }
 
@@ -181,9 +182,9 @@ if __name__ == "__main__":
     for env_name in environments:
         for algorithm, variants in algorithms.items():
 
-            #! To remove: temp code for training necessary models
-            if env_name == "Acrobot-v1" and algorithm == "dueling_dqn":
-                continue
+            # #! To remove: temp code for training necessary models
+            # if env_name == "Acrobot-v1" and algorithm == "dueling_dqn":
+            #     continue
             rewards_dict = {}
             agents_dict = {}
 
