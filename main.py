@@ -2,44 +2,42 @@ import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import torch
 import pandas as pd
 from algorithms.dueling_dqn import DQNAgent
 from algorithms.mc_reinforce import MCREINFORCE
 
 # Hyperparameters
-SEEDS = [0, 10, 20, 30, 40]
+SEEDS = [42, 123, 456, 789, 1024]
 EPISODES = 1000
 TUNING_EPISODES = 200
 GAMMA = 0.99
-LEARNING_RATES = [1e-4, 1e-3]
+# LEARNING_RATES = [1e-4, 1e-3]
 BATCH_SIZE = 64
 MEMORY_SIZE = 10000
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 TARGET_UPDATE = 10
-HIDDEN_LAYER_CONFIGS = [[64, 64], [128, 128], [64, 64, 64]]
+# HIDDEN_LAYER_CONFIGS = [[64, 64], [128, 128], [64, 64, 64]]
 
-# Configuration for hyperparameters based on environment and model
 HYPERPARAM_CONFIG = {
     "Acrobot-v1": {
         "dueling_dqn": {
-            "hidden_layers": [[64, 64], [128, 128]],
+            "hidden_layers": [[64, 64], [128, 128], [64, 64, 64]],
             "learning_rates": [1e-4, 1e-3],
         },
         "mc_reinforce": {
-            "hidden_layers": [[64, 64], [128, 128]],
-            "learning_rates": [1e-3, 1e-2],
+            "hidden_layers": [[0], [16, 16]],
+            "learning_rates": [1e-5, 1e-4],
         },
     },
     "CartPole-v1": {
         "dueling_dqn": {
-            "hidden_layers": [[64, 64, 64], [128, 128]],
+            "hidden_layers": [[64, 64], [128, 128], [64, 64, 64]],
             "learning_rates": [1e-4, 1e-3],
         },
         "mc_reinforce": {
-            "hidden_layers": [[64, 64], [128, 128]],
-            "learning_rates": [1e-3, 1e-2],
+            "hidden_layers": [[0], [16, 16]],
+            "learning_rates": [1e-5, 1e-4],
         },
     },
 }

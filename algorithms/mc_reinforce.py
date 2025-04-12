@@ -12,10 +12,11 @@ class PolicyNetwork(nn.Module):
         super(PolicyNetwork, self).__init__()
         layers = []
         input_dim = state_dim
-        for hidden_dim in hidden_layers:
-            layers.append(nn.Linear(input_dim, hidden_dim))
-            layers.append(nn.ReLU())
-            input_dim = hidden_dim
+        if hidden_layers[0] != 0:
+            for hidden_dim in hidden_layers:
+                layers.append(nn.Linear(input_dim, hidden_dim))
+                layers.append(nn.ReLU())
+                input_dim = hidden_dim
         layers.append(nn.Linear(input_dim, action_dim))
         layers.append(nn.Softmax(dim=-1))
         self.fc = nn.Sequential(*layers)
@@ -88,8 +89,8 @@ class MCREINFORCE:
             returns = torch.FloatTensor(returns)
 
             # Update policy
-            states = np.array(states)  # Convert list of states to a NumPy array
-            states = torch.FloatTensor(states)  # Then convert to a PyTorch tensor
+            states = np.array(states)
+            states = torch.FloatTensor(states)
             actions = torch.LongTensor(actions)
             action_probs = (
                 self.policy_net(states).gather(1, actions.unsqueeze(1)).squeeze()
