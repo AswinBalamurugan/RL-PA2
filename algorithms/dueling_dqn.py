@@ -10,11 +10,12 @@ import os
 
 class DuelingDQN(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_layers=[64, 64], type=1):
+        self.hidden_layers = hidden_layers
         super(DuelingDQN, self).__init__()
         self.type = type
         layers = []
         input_dim = state_dim
-        for hidden_dim in hidden_layers:
+        for hidden_dim in self.hidden_layers:
             layers.append(nn.Linear(input_dim, hidden_dim))
             layers.append(nn.ReLU())
             input_dim = hidden_dim
@@ -63,6 +64,7 @@ class DQNAgent:
         self.state_dim = env.observation_space.shape[0]
         self.action_dim = env.action_space.n
         self.dueling_type = dueling_type
+        self.max_timesteps = 500
 
         torch.manual_seed(seed)
         np.random.seed(seed)
@@ -106,10 +108,11 @@ class DQNAgent:
 
     def train(self, episodes=1000):
         rewards_per_episode = []
-        for episode in tqdm(range(episodes), desc="Training Dueling DQN"):
+        progress_bar = tqdm(range(episodes), desc="Training Dueling DQN")
+        for episode in progress_bar:
             state = self.env.reset()[0]
             total_reward = 0
-            for t in range(500):
+            for t in range(self.max_timesteps):
                 if random.random() < self.epsilon:
                     action = self.env.action_space.sample()
                 else:
@@ -135,13 +138,25 @@ class DQNAgent:
             if episode % 10 == 0:
                 self.target_q_net.load_state_dict(self.q_net.state_dict())
 
+            progress_bar.set_postfix({"reward": total_reward})
+
         return rewards_per_episode
 
     def save_model(self, model_name):
+        checkpoint = {
+            "state_dict": self.q_net.state_dict(),
+            "hidden_layers": self.q_net.hidden_layers,
+            "dueling_type": self.dueling_type,
+        }
         model_path = os.path.join(f"{model_name}.pth")
-        torch.save(self.q_net.state_dict(), model_path)
+        torch.save(checkpoint, model_path)
         print(f"Dueling DQN model saved to {model_path}\n")
 
     def load_model(self, model_path):
-        self.q_net.load_state_dict(torch.load(model_path))
+        checkpoint = torch.load(model_path)
+        self.q_net = DuelingDQN(
+            hidden_layers=checkpoint["hidden_layers"],
+            type=checkpoint["dueling_type"],
+        )
+        self.q_net.load_state_dict(checkpoint["state_dict"])
         self.q_net.eval()
