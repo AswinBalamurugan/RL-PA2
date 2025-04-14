@@ -43,11 +43,11 @@ Two update rules are implemented and compared:
 
 - **Type-1**: Uses the mean advantage normalization
 
-  $Q(s,a; θ) = V(s; θ) + (A(s,a; θ) - (1/|\Alpha|)\Sigma_{a'∈|\Alpha|} A(s,a'; θ))$
+  $Q(s,a; \theta) = V(s; \theta) + (A(s,a; \theta) - \frac{1}{|\mathcal{A}|}\sum_{a'\in\mathcal{A}} A(s,a'; \theta))$
 
 - **Type-2**: Uses the max advantage normalization
 
-  $Q(s,a; θ) = V(s; θ) + (A(s,a; θ) - max_{a'∈|\Alpha|} A(s,a'; θ))$
+  $Q(s,a; \theta) = V(s; \theta) + (A(s,a; \theta) - \max_{a'\in\mathcal{A}} A(s,a'; \theta))$
 
 ### Monte Carlo REINFORCE
 
@@ -55,13 +55,13 @@ REINFORCE is a policy gradient method with two variants:
 
 - **Without Baseline**: Standard policy gradient
 
-  $\bold{θ} = \bold{θ} + α·G_t·∇π(A_t|S_t,\bold{θ})/π(A_t|S_t,\bold{θ})$
+  $\boldsymbol{\theta} = \boldsymbol{\theta} + \alpha \cdot G_t \cdot \nabla_{\boldsymbol{\theta}} \log \pi(A_t|S_t,\boldsymbol{\theta})$
 
 - **With Baseline**: Uses a learned value function to reduce variance
 
-  $\bold{θ} = \bold{θ} + α·(G_t - V(S_t;\bold{Φ}))·∇π(A_t|S_t,\bold{θ})/π(A_t|S_t,\bold{θ})$
+  $\boldsymbol{\theta} = \boldsymbol{\theta} + \alpha \cdot (G_t - V(S_t;\phi)) \cdot \nabla_{\boldsymbol{\theta}} \log \pi(A_t|S_t,\boldsymbol{\theta})$
 
-The baseline $V(·;\bold{Φ})$ is updated using TD(0) method.
+The baseline $V(·;Φ)$ is updated using TD(0) method.
 
 ## Implementation Details
 
