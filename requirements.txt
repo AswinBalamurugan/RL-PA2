@@ -1,0 +1,8 @@
+numpy
+matplotlib
+torch
+gymnasium
+pandas
+seaborn
+tqdm
+scienceplots
