@@ -77,13 +77,6 @@ class MCREINFORCE:
                 self.value_net.parameters(), lr=learning_rate
             )
 
-    def get_action(self, state):
-        state_tensor = torch.FloatTensor(state)
-        probs = self.policy_net(state_tensor)
-        dist = torch.distributions.Categorical(probs)
-        action = dist.sample()
-        return action.item(), dist.log_prob(action)
-
     def compute_returns(self, rewards, gamma=0.99):
         returns = []
         G = 0
@@ -92,25 +85,34 @@ class MCREINFORCE:
             returns.insert(0, G)
         return torch.FloatTensor(returns)
 
-    def train(self, episodes=1000, gamma=0.99):
+    def get_action(self, state):
+        state_tensor = torch.FloatTensor(state)
+        probs = self.policy_net(state_tensor)
+        dist = torch.distributions.Categorical(probs)
+        action = dist.sample()
+        return action.item(), dist.log_prob(action), probs
+
+    def train(self, episodes=1000, gamma=0.99, clip_norm=0.5):
         rewards_per_episode = []
         progress_bar = tqdm(range(episodes), desc="Training Progress")
 
-        for episode in progress_bar:
+        for _ in progress_bar:
             state = self.env.reset()[0]
             log_probs = []
             rewards = []
             states = []
+            action_probs = []
             total_reward = 0
             done = False
 
             for t in range(self.max_timesteps):
-                action, log_prob = self.get_action(state)
+                action, log_prob, probs = self.get_action(state)
                 next_state, reward, done, _, _ = self.env.step(action)
 
                 states.append(state)
                 log_probs.append(log_prob)
                 rewards.append(reward)
+                action_probs.append(probs)
                 total_reward += reward
                 state = next_state
 
@@ -119,10 +121,22 @@ class MCREINFORCE:
 
             returns = self.compute_returns(rewards, gamma)
             states_tensor = torch.FloatTensor(np.array(states))
+            action_probs_tensor = torch.stack(action_probs)
 
             if self.use_baseline:
-                value_preds = self.value_net(states_tensor)
-                value_loss = nn.MSELoss()(value_preds, returns)
+                value_loss = 0.0
+                for t in range(len(states) - 1):
+                    current_value = self.value_net(torch.FloatTensor(states[t]))
+                    next_value = self.value_net(
+                        torch.FloatTensor(states[t + 1])
+                    ).detach()
+                    target = rewards[t] + gamma * next_value
+                    value_loss += nn.MSELoss()(current_value, target)
+
+                if len(states) > 0:
+                    terminal_value = self.value_net(torch.FloatTensor(states[-1]))
+                    terminal_target = torch.tensor(rewards[-1], dtype=torch.float32)
+                    value_loss += nn.MSELoss()(terminal_value, terminal_target)
 
                 with torch.no_grad():
                     baseline_vals = self.value_net(states_tensor)
@@ -130,14 +144,28 @@ class MCREINFORCE:
             else:
                 advantages = returns
 
-            policy_loss = -torch.sum(torch.stack(log_probs) * advantages)
+            entropy = -torch.sum(
+                action_probs_tensor * torch.log(action_probs_tensor + 1e-8), dim=1
+            ).mean()
+            entropy_coef = 0.01
+
+            policy_loss = (
+                -torch.sum(torch.stack(log_probs) * advantages) - entropy_coef * entropy
+            )
+
             self.optimizer.zero_grad()
             policy_loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                self.policy_net.parameters(), max_norm=clip_norm
+            )
             self.optimizer.step()
 
             if self.use_baseline:
                 self.value_optimizer.zero_grad()
                 value_loss.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    self.value_net.parameters(), max_norm=clip_norm
+                )
                 self.value_optimizer.step()
 
             rewards_per_episode.append(total_reward)

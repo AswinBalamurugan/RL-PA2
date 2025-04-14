@@ -12,7 +12,12 @@ def hyperparameter_tuning(env_name, algorithm, variant):
     best_hyperparams = None
     best_avg_reward = -np.inf
     seed = SEEDS[0]
-    config = HYPERPARAM_CONFIG[env_name][algorithm]
+
+    if algorithm == "mc_reinforce":
+        config = HYPERPARAM_CONFIG[env_name][algorithm][variant]
+    else:
+        config = HYPERPARAM_CONFIG[env_name][algorithm]
+
     total_runs = len(config["hidden_layers"]) * len(config["learning_rates"])
     current_run = 0
 
@@ -45,11 +50,10 @@ if __name__ == "__main__":
     os.makedirs(os.path.join("results", "plots"), exist_ok=True)
     os.makedirs(os.path.join("results", "csv"), exist_ok=True)
 
-    environments = ["Acrobot-v1"]
-    # environments = ["Acrobot-v1", "CartPole-v1"]
+    environments = ["Acrobot-v1", "CartPole-v1"]
     algorithms = {
         "dueling_dqn": [1, 2],
-        # "mc_reinforce": ["without_baseline", "with_baseline"],
+        "mc_reinforce": ["without_baseline", "with_baseline"],
     }
 
     for env_name in environments:
