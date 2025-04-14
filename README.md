@@ -1,4 +1,4 @@
-# Deep Reinforcement Learning for Classical Control Tasks
+# RL Programming Assignment 2
 
 - Aswin Balamurugan (ch20b018)
 - Sanjith Balamurugan (mm20b055)
